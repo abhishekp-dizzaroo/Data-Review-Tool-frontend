@@ -1,3 +1,9 @@
+export interface Users {
+  _id: string;
+  username: string;
+  email: string;
+}
+
 export interface LoginCredentials {
     email: string;
     password: string;

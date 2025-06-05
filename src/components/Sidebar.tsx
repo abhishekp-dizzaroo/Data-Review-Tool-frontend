@@ -1,4 +1,4 @@
-import { Home, BarChart2, Layers, Settings, PlusCircle, MessageSquare, Database, List, ChevronDown, ChevronRight, Trash2 } from 'lucide-react'
+import { Home, BarChart2, Layers, Settings, PlusCircle, MessageSquare, Database, List, ChevronDown, ChevronRight, Trash2, Share2 } from 'lucide-react'
 import { useLocation, Link, useNavigate } from 'react-router'
 import { StandardQuery } from '../constants/StandardQuery'
 import { useState, useEffect } from 'react'
@@ -82,6 +82,11 @@ function Sidebar() {
       icon: <List size={16} />,
       label: 'Tasks',
       path: '/#'
+    },
+    {
+      icon: <Share2 size={16} />,
+      label: 'Shared Chats',
+      path: '/shared-chats'
     }
   ];
 

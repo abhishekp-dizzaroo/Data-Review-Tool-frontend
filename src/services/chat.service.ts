@@ -14,6 +14,7 @@ export interface Message {
   data?: QueryResult[];
   rowcount?: number;
   answer?: string;
+  steps?: string;
 }
 
 export interface ChatHistory {
@@ -25,7 +26,30 @@ export interface ChatHistory {
   user_id: string;
 }
 
+export interface ShareChatRequest {
+  sender_id: string;
+  receiver_id: string;
+  question: string;
+  sql_query?: string;
+  result?: QueryResult[];
+  message?: string;
+  steps?: string;
+}
 
+export interface SharedChat {
+  share_id: string;
+  sender_id: string;
+  sender_name: string;
+  receiver_id: string;
+  receiver_name: string;
+  question: string;
+  sql_query?: string;
+  result?: QueryResult[];
+  message?: string;
+  steps?: string;
+  shared_at: string;
+  status: 'pending' | 'viewed' | 'accepted' | 'rejected';
+}
 
 export type ModelType = 'sqlCoder' | 'gemini' | 'openAI' | 'rag' | 'langchain' | 'agent' | 'gemini_rag';
 const user = authService.getCurrentUser();
@@ -151,5 +175,103 @@ export const chatService = {
       console.error('Error deleting chat history:', error);
       throw error;
     }
+  },
+
+  shareChat: async (request: ShareChatRequest): Promise<{ share_id: string; message: string }> => {
+    try {
+      console.log('Sending share request:', request);
+      
+      // Ensure all optional fields are properly handled
+      const shareRequest = {
+        sender_id: request.sender_id,
+        receiver_id: request.receiver_id,
+        question: request.question,
+        sql_query: request.sql_query || null,
+        result: request.result || null,
+        message: request.message || null,
+        steps: request.steps || null
+      };
+      
+      console.log('Processed share request:', shareRequest);
+      
+      const response = await axios.post(`${API_BASE_URL}/api/chat/share`, shareRequest);
+      console.log('Share response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error sharing chat:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        console.error('Error response data:', error.response.data);
+        console.error('Error response status:', error.response.status);
+      }
+      throw error;
+    }
+  },
+
+  getReceivedChats: async (receiver_id: string): Promise<SharedChat[]> => {
+    try {
+      console.log('Fetching received chats for user:', receiver_id);
+      const response = await axios.get(`${API_BASE_URL}/api/chat/received/${receiver_id}`);
+      console.log('Received chats response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching received chats:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        console.error('Error response data:', error.response.data);
+        console.error('Error response status:', error.response.status);
+      }
+      throw error;
+    }
+  },
+
+  getSentChats: async (sender_id: string): Promise<SharedChat[]> => {
+    try {
+      console.log('Fetching sent chats for user:', sender_id);
+      const response = await axios.get(`${API_BASE_URL}/api/chat/sent/${sender_id}`);
+      console.log('Sent chats response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching sent chats:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        console.error('Error response data:', error.response.data);
+        console.error('Error response status:', error.response.status);
+      }
+      throw error;
+    }
+  },
+
+  updateChatStatus: async (share_id: string, user_id: string, new_status: string): Promise<void> => {
+    try {
+      console.log('Updating chat status:', { share_id, user_id, new_status });
+      const response = await axios.put(`${API_BASE_URL}/api/chat/share/${share_id}/status`, {
+        user_id,
+        new_status
+      });
+      console.log('Status update response:', response.data);
+    } catch (error) {
+      console.error('Error updating chat status:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        console.error('Error response data:', error.response.data);
+        console.error('Error response status:', error.response.status);
+      }
+      throw error;
+    }
+  },
+
+  deleteSharedChat: async (share_id: string, user_id: string): Promise<void> => {
+    try {
+      console.log('Deleting shared chat:', { share_id, user_id });
+      const response = await axios.delete(`${API_BASE_URL}/api/chat/share/${share_id}`, {
+        data: { user_id }
+      });
+      console.log('Delete response:', response.data);
+    } catch (error) {
+      console.error('Error deleting shared chat:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        console.error('Error response data:', error.response.data);
+        console.error('Error response status:', error.response.status);
+      }
+      throw error;
+    }
   }
+
 };
