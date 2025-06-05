@@ -1,5 +1,5 @@
 import axios from 'axios';
-import {AuthResponse, LoginCredentials, RegisterData} from '../models/user.model'
+import {AuthResponse, LoginCredentials, RegisterData, Users} from '../models/user.model'
 
 // Define the base URL for API requests
 
@@ -14,16 +14,16 @@ const apiClient = axios.create({
 });
 
 // // Add request interceptor to include auth token in headers
-// apiClient.interceptors.request.use(
-//   (config) => {
-//     const token = localStorage.getItem('token');
-//     if (token) {
-//       config.headers.Authorization = `Bearer ${token}`;
-//     }
-//     return config;
-//   },
-//   (error) => Promise.reject(error)
-// );
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 // Auth service functions
 export const authService = {
@@ -66,6 +66,12 @@ export const authService = {
     }
   },
 
+  getAllUsers : async (): Promise<Users[]> => {
+    const response = await apiClient.get<Users[]>('/users');
+    console.log("All Users", response.data);
+    return response.data;
+  },
+  
   // Logout user
   logout(): void {
     localStorage.removeItem('token');

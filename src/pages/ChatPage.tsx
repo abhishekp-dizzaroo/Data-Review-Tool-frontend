@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Send, Database, Bot, User } from 'lucide-react'
+import { Send, Database, Bot, User, Share2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -10,8 +10,8 @@ import Markdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useLocation, useNavigate, useParams } from 'react-router'
 import { authService } from '../services/user.service'
-
 import { Message, chatService, ModelType } from '../services/chat.service'
+import { ShareDialog } from '@/components/ShareDialog'
 
 function ChatPage() {
   const location = useLocation();
@@ -24,6 +24,8 @@ function ChatPage() {
   const [currentChatId, setCurrentChatId] = useState<string | null>(chatId || null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const hasInitialized = useRef(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
 
   // Reset state on mount or when navigating to new chat
   useEffect(() => {
@@ -144,9 +146,39 @@ function ChatPage() {
     }
   };
 
-  const renderMessageContent = (message: Message) => {
+  const handleShareClick = (message: Message, index: number) => {
+    // If this is a user message, find the next message (AI's response)
+    if (message.role === 'user' && index < conversations.length - 1) {
+      const aiResponse = conversations[index + 1];
+      if (aiResponse.role === 'assistant') {
+        setSelectedMessage({
+          role: 'assistant',
+          content: message.content,
+          sql_query: aiResponse.sql_query,
+          data: aiResponse.data,
+          answer: aiResponse.answer,
+          steps: aiResponse.content
+        });
+        setShareDialogOpen(true);
+      }
+    }
+  };
+
+  const renderMessageContent = (message: Message, index: number) => {
     if (message.role === 'user') {
-      return <p className="text-sm">{message.content}</p>;
+      return (
+        <div className="flex items-center justify-between group">
+          <p className="text-sm">{message.content}</p>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={() => handleShareClick(message, index)}
+          >
+            <Share2 size={16} />
+          </Button>
+        </div>
+      );
     }
 
     return (
@@ -166,12 +198,18 @@ function ChatPage() {
         )}
 
         {message.content && (
-          <Markdown remarkPlugins={[remarkGfm]}>{message.content}</Markdown>
+          <div className="bg-muted rounded-lg p-0">
+            <div className="flex items-center space-x-2 text-lg text-muted-foreground mb-2">
+              <span>Step To get SQL Query : </span>
+            </div>
+            <Markdown remarkPlugins={[remarkGfm]}>{message.content}</Markdown>
+          </div>
         )}
 
 
         {message.data && message.data.length > 0 && (
           <div className="overflow-x-auto">
+            <span className="text-lg text-muted-foreground mb-2">Result : </span>
             <table className="min-w-full divide-y divide-border">
               <thead className="bg-muted">
                 <tr>
@@ -210,9 +248,16 @@ function ChatPage() {
           </div>
         )}
         
-        <Markdown remarkPlugins={[remarkGfm]}>{message.answer}</Markdown>
+        
 
-    
+        {message.answer && (
+          <div className="bg-muted rounded-lg p-0">
+            <div className="flex items-center space-x-2 text-lg text-muted-foreground mb-2">
+              <span>Insights : </span>
+            </div>
+            <Markdown remarkPlugins={[remarkGfm]}>{message.answer}</Markdown>
+          </div>
+        )}
         
       </div>
     );
@@ -231,7 +276,7 @@ function ChatPage() {
                   "flex gap-3 mb-6",
                   message.role === "user" ? "justify-end" : "justify-start"
                 )}
-              >
+              > 
                 <Avatar className="size-8">
                   {message.role === "user" ? (
                     <AvatarFallback className="bg-primary text-primary-foreground">
@@ -249,7 +294,7 @@ function ChatPage() {
                     ? "bg-muted" 
                     : "bg-primary text-primary-foreground"
                 )}>
-                  {renderMessageContent(message)}
+                  {renderMessageContent(message, index)}
                 </div>
               </div>
             ))}
@@ -313,6 +358,17 @@ function ChatPage() {
           </form>
         </div>
       </div>
+      
+      {selectedMessage && (
+        <ShareDialog
+          isOpen={shareDialogOpen}
+          onClose={() => {
+            setShareDialogOpen(false);
+            setSelectedMessage(null);
+          }}
+          message={selectedMessage}
+        />
+      )}
     </div>
   )
 }

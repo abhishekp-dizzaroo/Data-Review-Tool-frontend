@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage';
 import MainPage from './pages/MainPage'
 import RegisterPage from './pages/RegisterPage';
 import ChatPage from './pages/ChatPage';
+import SharedChatsPage from './pages/SharedChatsPage';
 
 import { authService } from "./services/user.service"
 import StandardQueryPage from './pages/StandardQueryPage';
@@ -46,6 +47,7 @@ function App() {
                 <Route path="/chat" element={<ChatPage/>} />
                 <Route path="/chat/:chatId" element={<ChatPage/>} />
                 <Route path="/standard-queries" element={<StandardQueryPage/>} />
+                <Route path="/shared-chats" element={<SharedChatsPage/>} />
                 {/* <Route path="/task" element={<h1>Task Page</h1>} /> */}
             </Route>
           </Routes>
