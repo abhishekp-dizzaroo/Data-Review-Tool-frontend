@@ -183,8 +183,6 @@ function ChatPage() {
 
     return (
       <div className="space-y-4">
-        
-
         {message.sql_query && (
           <div className="bg-muted rounded-lg p-4">
             <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-2">
@@ -332,6 +330,7 @@ function ChatPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="sqlCoder">SQL Coder</SelectItem>
+                <SelectItem value="claude">Claude</SelectItem>
                 <SelectItem value="gemini">Gemini</SelectItem>
                 <SelectItem value="gemini_rag">Gemini RAG</SelectItem>
                 <SelectItem value="openAI">OpenAI</SelectItem>

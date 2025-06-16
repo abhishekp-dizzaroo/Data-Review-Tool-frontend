@@ -51,7 +51,7 @@ export interface SharedChat {
   status: 'pending' | 'viewed' | 'accepted' | 'rejected';
 }
 
-export type ModelType = 'sqlCoder' | 'gemini' | 'openAI' | 'rag' | 'langchain' | 'agent' | 'gemini_rag';
+export type ModelType = 'sqlCoder' | 'gemini' | 'openAI' | 'rag' | 'langchain' | 'agent' | 'gemini_rag' | 'claude';
 const user = authService.getCurrentUser();
 const user_id = user?._id;
 
