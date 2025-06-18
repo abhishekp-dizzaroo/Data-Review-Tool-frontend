@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { authService } from './user.service';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}` : 'http://localhost:8000';
 
 export interface QueryResult {
   subject_id: number;
