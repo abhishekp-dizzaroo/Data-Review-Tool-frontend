@@ -1,0 +1,13 @@
+{
+  "routes": [
+    {
+      "route": "/api/*",
+      "rewrite": "https://your-backend.azurewebsites.net/api/*",
+      "allowedMethods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"]
+    }
+  ],
+ "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/assets/*", "/*.css", "/*.js", "/*.ico", "/*.png", "/*.jpg"]
+  }
+}
