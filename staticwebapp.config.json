@@ -2,11 +2,12 @@
   "routes": [
     {
       "route": "/api/*",
-      "rewrite": "https://your-backend.azurewebsites.net/api/*",
-      "allowedMethods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"]
+      "allowedMethods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
+      "rewrite": "/api/*",
+      "origin": "https://data-review-tool-backend-beb5fbhgh4ctcxa3.canadacentral-01.azurewebsites.net"
     }
   ],
- "navigationFallback": {
+  "navigationFallback": {
     "rewrite": "/index.html",
     "exclude": ["/assets/*", "/*.css", "/*.js", "/*.ico", "/*.png", "/*.jpg"]
   }
