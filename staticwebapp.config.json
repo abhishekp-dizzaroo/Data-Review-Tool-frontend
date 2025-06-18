@@ -3,7 +3,6 @@
     {
       "route": "/api/*",
       "allowedMethods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
-      "rewrite": "/api/*",
       "origin": "https://data-review-tool-backend-beb5fbhgh4ctcxa3.canadacentral-01.azurewebsites.net"
     }
   ],
