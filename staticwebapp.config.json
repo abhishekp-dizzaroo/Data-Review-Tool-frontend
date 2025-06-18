@@ -1,0 +1,13 @@
+{
+  "routes": [
+    {
+      "route": "/api/*",
+      "allowedMethods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
+      "origin": "https://data-review-tool-backend-beb5fbhgh4ctcxa3.canadacentral-01.azurewebsites.net"
+    }
+  ],
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/assets/*", "/*.css", "/*.js", "/*.ico", "/*.png", "/*.jpg"]
+  }
+}
