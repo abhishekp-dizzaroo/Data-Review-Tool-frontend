@@ -1,46 +1,21 @@
 import axios from 'axios';
 import {AuthResponse, LoginCredentials, RegisterData, Users} from '../models/user.model'
+import axiosInstance from "../config/axios"
 
-// Define the base URL for API requests
-
-const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/auth` : 'http://localhost:8000/api/auth';
-
-// Create axios instance with default config
-const apiClient = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// // Add request interceptor to include auth token in headers
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// Auth service functions
 export const authService = {
   // Login user
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      const response = await apiClient.post<AuthResponse>('/login', credentials);
+      const response = await axiosInstance.post<AuthResponse>('/api/auth/login', credentials);
       
-      // Store token in localStorage
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      // Store token and user in localStorage
       localStorage.setItem('token', response.data.token.access_token);
-      console.log("Login Response", response.data);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
       
+      console.log("Login Response", response.data);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
-        // Handle specific error responses from the API
         throw new Error(error.response.data.message || 'Login failed');
       }
       throw new Error('Unable to connect to the server');
@@ -50,13 +25,13 @@ export const authService = {
   // Register new user
   async register(userData: RegisterData): Promise<AuthResponse> {
     try {
-      const response = await apiClient.post<AuthResponse>('/register', userData);
+      const response = await axiosInstance.post<AuthResponse>('/api/auth/register', userData);
       
-      // Store token in localStorage
-      // localStorage.setItem('token', response.data.token);
+      // Store token and user if needed
+      // localStorage.setItem('token', response.data.token.access_token);
       localStorage.setItem('user', JSON.stringify(response.data));
-      console.log("Register Response", response.data);
       
+      console.log("Register Response", response.data);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
@@ -66,12 +41,18 @@ export const authService = {
     }
   },
 
-  getAllUsers : async (): Promise<Users[]> => {
-    const response = await apiClient.get<Users[]>('/users');
-    console.log("All Users", response.data);
-    return response.data;
+  // Get all users
+  async getAllUsers(): Promise<Users[]> {
+    try {
+      const response = await axiosInstance.get<Users[]>('/api/auth/users');
+      console.log("All Users", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching users", error);
+      throw error;
+    }
   },
-  
+
   // Logout user
   logout(): void {
     localStorage.removeItem('token');
@@ -79,16 +60,12 @@ export const authService = {
   },
 
   // Get current authenticated user
-  getCurrentUser(): { _id: string; email: string; username: string } | null {
+  getCurrentUser(): Users | null {
     const userStr = localStorage.getItem('user');
     if (!userStr) return null;
     
     try {
-      const user = JSON.parse(userStr);
-      if (!user || !user._id) {
-        console.warn('Invalid user data in localStorage');
-        return null;
-      }
+      const user = JSON.parse(userStr) as Users;
       return user;
     } catch (e) {
       console.error('Error parsing user data:', e);
@@ -105,6 +82,4 @@ export const authService = {
   getToken(): string | null {
     return localStorage.getItem('token');
   },
-  
-};export default apiClient;
-
+};

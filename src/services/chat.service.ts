@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { authService } from './user.service';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}` : 'http://localhost:8000';
+import axiosInstance from '@/config/axios';
 
 export interface QueryResult {
   subject_id: number;
@@ -61,7 +60,7 @@ export const chatService = {
     console.log(prompt);
     
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/ai/query`, {
+      const response = await axiosInstance.post(`/api/ai/query`, {
         prompt: prompt,
         model: model,
         user_id: user_id
@@ -113,7 +112,7 @@ export const chatService = {
 
       console.log('Sending request with data:', requestData);
 
-      const response = await axios.post(`${API_BASE_URL}/api/chat-history`, requestData);
+      const response = await axiosInstance.post(`/api/chat-history`, requestData);
       console.log('Chat history created:', response.data);
       return response.data;
     } catch (error) {
@@ -129,7 +128,7 @@ export const chatService = {
 
   getUserChatHistories: async (user_id: string): Promise<ChatHistory[]> => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/chat-history/${user_id}`);
+      const response = await axiosInstance.get(`/api/chat-history/${user_id}`);
       console.log("response",response.data);
       return response.data;
     } catch (error) {
@@ -140,7 +139,7 @@ export const chatService = {
 
   getChatHistory: async (chat_id: string): Promise<ChatHistory> => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/chat-history/single/${chat_id}`);
+      const response = await axiosInstance.get(`/api/chat-history/single/${chat_id}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching chat history:', error);
@@ -161,7 +160,7 @@ export const chatService = {
         }))
       };
 
-      await axios.put(`${API_BASE_URL}/api/chat-history/${chat_id}`, requestData);
+      await axiosInstance.put(`/api/chat-history/${chat_id}`, requestData);
     } catch (error) {
       console.error('Error updating chat history:', error);
       throw error;
@@ -170,7 +169,7 @@ export const chatService = {
 
   deleteChatHistory: async (chat_id: string): Promise<void> => {
     try {
-      await axios.delete(`${API_BASE_URL}/api/chat-history/${chat_id}`);
+      await axiosInstance.delete(`/api/chat-history/${chat_id}`);
     } catch (error) {
       console.error('Error deleting chat history:', error);
       throw error;
@@ -194,7 +193,7 @@ export const chatService = {
       
       console.log('Processed share request:', shareRequest);
       
-      const response = await axios.post(`${API_BASE_URL}/api/chat/share`, shareRequest);
+      const response = await axiosInstance.post(`/api/chat/share`, shareRequest);
       console.log('Share response:', response.data);
       return response.data;
     } catch (error) {
@@ -210,7 +209,7 @@ export const chatService = {
   getReceivedChats: async (receiver_id: string): Promise<SharedChat[]> => {
     try {
       console.log('Fetching received chats for user:', receiver_id);
-      const response = await axios.get(`${API_BASE_URL}/api/chat/received/${receiver_id}`);
+      const response = await axiosInstance.get(`/api/chat/received/${receiver_id}`);
       console.log('Received chats response:', response.data);
       return response.data;
     } catch (error) {
@@ -226,7 +225,7 @@ export const chatService = {
   getSentChats: async (sender_id: string): Promise<SharedChat[]> => {
     try {
       console.log('Fetching sent chats for user:', sender_id);
-      const response = await axios.get(`${API_BASE_URL}/api/chat/sent/${sender_id}`);
+      const response = await axiosInstance.get(`/api/chat/sent/${sender_id}`);
       console.log('Sent chats response:', response.data);
       return response.data;
     } catch (error) {
@@ -242,7 +241,7 @@ export const chatService = {
   updateChatStatus: async (share_id: string, user_id: string, new_status: string): Promise<void> => {
     try {
       console.log('Updating chat status:', { share_id, user_id, new_status });
-      const response = await axios.put(`${API_BASE_URL}/api/chat/share/${share_id}/status`, {
+      const response = await axiosInstance.put(`/api/chat/share/${share_id}/status`, {
         user_id,
         new_status
       });
@@ -260,7 +259,7 @@ export const chatService = {
   deleteSharedChat: async (share_id: string, user_id: string): Promise<void> => {
     try {
       console.log('Deleting shared chat:', { share_id, user_id });
-      const response = await axios.delete(`${API_BASE_URL}/api/chat/share/${share_id}`, {
+      const response = await axiosInstance.delete(`/api/chat/share/${share_id}`, {
         data: { user_id }
       });
       console.log('Delete response:', response.data);
