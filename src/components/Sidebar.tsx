@@ -1,4 +1,4 @@
-import { Home, BarChart2, Layers, Settings, PlusCircle, MessageSquare, Database, List, ChevronDown, ChevronRight, Trash2, Share2 } from 'lucide-react'
+import { Home, BarChart2, Layers, PlusCircle, MessageSquare, Database, List, ChevronDown, ChevronRight, Trash2, Share2, MessageCircle } from 'lucide-react'
 import { useLocation, Link, useNavigate } from 'react-router'
 import { StandardQuery } from '../constants/StandardQuery'
 import { useState, useEffect } from 'react'
@@ -53,11 +53,12 @@ function Sidebar() {
   };
 
   // Function to handle query click
-  const handleQueryClick = (query: string) => {
+  const handleQueryClick = (query: string, context: string) => {
     // Navigate to chat with the new query
     navigate('/chat', { 
       state: { 
-        query: query
+        query: query,
+        context: context
       }
     });
   };
@@ -210,9 +211,9 @@ function Sidebar() {
                                 <li 
                                   key={idx}
                                   className="text-xs cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/30"
-                                  onClick={() => handleQueryClick(query)}
+                                  onClick={() => handleQueryClick(query.query, query.context)}
                                 >
-                                  {query}
+                                  {query.query}
                                 </li>
                               ))}
                             </ul>
@@ -226,26 +227,26 @@ function Sidebar() {
             </div>
           </div>
 
-          {/* Settings Section */}
-          <div className="mt-4 mb-2 px-3">
-            <div className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-2 px-2">SETTINGS</div>
+          {/* Feedback Section */}
+          <div className="mt-0 mb-2 px-3">
+            <div className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-2 px-2">FEEDBACK</div>
             <ul className="space-y-1">
               <li>
                 {(() => {
-                  const settingsPath = '/settings';
-                  const isActive = currentPath === settingsPath;
+                  const feedbackPath = '/feedback';
+                  const isActive = currentPath === feedbackPath;
 
                   return (
                     <Link
-                      to={settingsPath}
+                      to={feedbackPath}
                       className={`flex items-center px-2 py-2 text-sm rounded-md transition-colors duration-200 ${
                         isActive
                           ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
                           : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100'
                       }`}
                     >
-                      <Settings size={16} className={`mr-2 ${isActive ? 'text-blue-500 dark:text-blue-400' : ''}`} />
-                      <span>Settings</span>
+                      <MessageCircle size={16} className={`mr-2 ${isActive ? 'text-blue-500 dark:text-blue-400' : ''}`} />
+                      <span>Feedback</span>
                       {isActive && <div className="w-1 h-1 rounded-full bg-blue-600 dark:bg-blue-400 ml-auto"></div>}
                     </Link>
                   );
