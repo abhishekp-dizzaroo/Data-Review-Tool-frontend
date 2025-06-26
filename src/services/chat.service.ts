@@ -50,14 +50,14 @@ export interface SharedChat {
   status: 'pending' | 'viewed' | 'accepted' | 'rejected';
 }
 
-export type ModelType = 'sqlCoder' | 'gemini' | 'openAI' | 'rag' | 'langchain' | 'agent' | 'gemini_rag' | 'claude';
+export type ModelType = 'sqlCoder' | 'gemini' | 'openAI' | 'rag' | 'langchain' | 'agent' | 'gemini_rag' | 'claude' | 'deepseek_r1';
 const user = authService.getCurrentUser();
 const user_id = user?._id;
 
 export const chatService = {
   
   sendQuery: async (prompt: string, model: ModelType): Promise<Message> => {
-    console.log(prompt);
+    console.log("FULL_PROMPT",prompt);
     
     try {
       const response = await axiosInstance.post(`/api/ai/query`, {

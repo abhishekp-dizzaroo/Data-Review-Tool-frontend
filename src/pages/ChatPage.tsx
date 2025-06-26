@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Send, Database, Bot, User, Share2 } from 'lucide-react'
+import { Send, Database, Bot, User, Share2, ThumbsUp, ThumbsDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -12,6 +12,7 @@ import { useLocation, useNavigate, useParams } from 'react-router'
 import { authService } from '../services/user.service'
 import { Message, chatService, ModelType } from '../services/chat.service'
 import { ShareDialog } from '@/components/ShareDialog'
+import { feedbackService, FeedbackPayload } from '../services/feedback.service'
 
 function ChatPage() {
   const location = useLocation();
@@ -26,6 +27,11 @@ function ChatPage() {
   const hasInitialized = useRef(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
+  const [feedbackTarget, setFeedbackTarget] = useState<{ message: Message, index: number } | null>(null);
+  const [feedbackComment, setFeedbackComment] = useState('');
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [feedbackSuccess, setFeedbackSuccess] = useState(false);
 
   // Reset state on mount or when navigating to new chat
   useEffect(() => {
@@ -55,11 +61,13 @@ function ChatPage() {
   // Handle query from navigation
   useEffect(() => {
     const query = location.state?.query;
+    const context = location.state?.context;
     if (query) {
       // Clear the state after reading it
       navigate(location.pathname, { replace: true, state: {} });
       setInputMessage(query);
-      sendQuery(query);
+      
+      sendQuery(query, context);
     }
   }, [location.state]);
 
@@ -73,7 +81,7 @@ function ChatPage() {
   };
 
   // Function to send query to backend
-  const sendQuery = async (query: string) => {
+  const sendQuery = async (query: string, context: string) => {
     if (!query.trim()) return;
     
     setIsLoading(true);
@@ -88,8 +96,12 @@ function ChatPage() {
       
       const updatedConversations = [...conversations, userMessage];
       setConversations(updatedConversations);
-
-      const response = await chatService.sendQuery(query, selectedModel);
+      let full_prompt = `Question : ${query}`
+      if (context && context.trim() !== '') {
+        full_prompt += `\nContext: ${context}`;
+      }
+     
+      const response = await chatService.sendQuery(full_prompt, selectedModel);
       const finalConversations = [...updatedConversations, response];
       setConversations(finalConversations);
 
@@ -135,7 +147,7 @@ function ChatPage() {
     if (inputMessage.trim() === '' || isLoading) return;
     
     const userMessage = inputMessage.trim();
-    sendQuery(userMessage);
+    sendQuery(userMessage, "");
   };
 
   // Handle pressing Enter to send message
@@ -164,6 +176,67 @@ function ChatPage() {
     }
   };
 
+  const handleFeedback = async (message: Message, index: number, feedback: number) => {
+    const user = authService.getCurrentUser();
+    if (!user || !user._id) return;
+    if (feedback === -1) {
+      setFeedbackTarget({ message, index });
+      setFeedbackDialogOpen(true);
+    } else {
+      // Thumbs up, send immediately
+      const userMsg = conversations[index - 1];
+      const payload: FeedbackPayload = {
+        user_id: user._id,
+        prompt: userMsg?.content || '',
+        sql_query: message.sql_query,
+        data: message.data,
+        steps: message.content,
+        summary: message.answer,
+        feedback: 1,
+      };
+      setFeedbackLoading(true);
+      try {
+        await feedbackService.submitFeedback(payload);
+        setFeedbackSuccess(true);
+        setTimeout(() => setFeedbackSuccess(false), 2000);
+      } catch {
+        // Optionally handle error
+      } finally {
+        setFeedbackLoading(false);
+      }
+    }
+  };
+
+  const handleFeedbackSubmit = async () => {
+    if (!feedbackTarget) return;
+    const user = authService.getCurrentUser();
+    if (!user || !user._id) return;
+    const { message, index } = feedbackTarget;
+    const userMsg = conversations[index - 1];
+    const payload: FeedbackPayload = {
+      user_id: user._id,
+      prompt: userMsg?.content || '',
+      sql_query: message.sql_query,
+      data: message.data,
+      steps: message.content,
+      summary: message.answer,
+      feedback: -1,
+      comment: feedbackComment,
+    };
+    setFeedbackLoading(true);
+    try {
+      await feedbackService.submitFeedback(payload);
+      setFeedbackSuccess(true);
+      setFeedbackDialogOpen(false);
+      setFeedbackComment('');
+      setTimeout(() => setFeedbackSuccess(false), 2000);
+    } catch {
+      // Optionally handle error
+    } finally {
+      setFeedbackLoading(false);
+    }
+  };
+
   const renderMessageContent = (message: Message, index: number) => {
     if (message.role === 'user') {
       return (
@@ -182,7 +255,29 @@ function ChatPage() {
     }
 
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 group relative">
+       
+        {/* Feedback UI */}
+        <div className="absolute right-0 top-0 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+          <button
+            className="hover:text-green-600"
+            title="Thumbs Up"
+            disabled={feedbackLoading}
+            onClick={() => handleFeedback(message, index, 1)}
+          >
+            <ThumbsUp size={18} />
+          </button>
+          <button
+            className="hover:text-red-600"
+            title="Thumbs Down"
+            disabled={feedbackLoading}
+            onClick={() => handleFeedback(message, index, -1)}
+          >
+            <ThumbsDown size={18} />
+          </button>
+        </div>
+
+
         {message.sql_query && (
           <div className="bg-muted rounded-lg p-4">
             <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-2">
@@ -330,10 +425,11 @@ function ChatPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="sqlCoder">SQL Coder</SelectItem>
-                <SelectItem value="claude">Claude</SelectItem>
-                <SelectItem value="gemini">Gemini</SelectItem>
-                <SelectItem value="gemini_rag">Gemini RAG</SelectItem>
                 <SelectItem value="openAI">OpenAI</SelectItem>
+                <SelectItem value="gemini">Gemini</SelectItem>
+                <SelectItem value="deepseek_r1">DeepSeek-R1</SelectItem>
+                <SelectItem value="claude">Claude</SelectItem>
+                <SelectItem value="gemini_rag">Gemini RAG</SelectItem>
                 <SelectItem value="langchain">Langchain</SelectItem>
                 <SelectItem value="agent">Agent</SelectItem>
                 <SelectItem value="rag">RAG</SelectItem>
@@ -367,6 +463,36 @@ function ChatPage() {
           }}
           message={selectedMessage}
         />
+      )}
+
+      {/* Feedback Dialog */}
+      {feedbackDialogOpen && feedbackTarget && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30">
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h2 className="text-lg font-semibold mb-2">We appreciate your feedback!</h2>
+            <p className="mb-2">Please let us know what went wrong or how we can improve:</p>
+            <textarea
+              className="w-full border rounded p-2 mb-4 text-black dark:text-white"
+              rows={4}
+              value={feedbackComment}
+              onChange={e => setFeedbackComment(e.target.value)}
+              placeholder="Add your comment..."
+              disabled={feedbackLoading}
+            />
+            <div className="flex justify-end gap-2">
+              <Button variant="secondary" onClick={() => { setFeedbackDialogOpen(false); setFeedbackComment(''); }} disabled={feedbackLoading}>Cancel</Button>
+              <Button onClick={handleFeedbackSubmit} disabled={feedbackLoading || !feedbackComment.trim()}>
+                {feedbackLoading ? 'Submitting...' : 'Submit'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {feedbackSuccess && (
+        <div className="fixed bottom-4 right-4 rounded-md h-9 bg-green-800 text-xs font-medium transition-colors text-white active:bg-white focus:bg-white focus:outline-none px-4 py-2 shadow-lg z-50">
+          Thank you for your feedback!
+        </div>
       )}
     </div>
   )

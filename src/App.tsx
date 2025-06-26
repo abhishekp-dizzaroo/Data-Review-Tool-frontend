@@ -11,6 +11,7 @@ import SharedChatsPage from './pages/SharedChatsPage';
 import { authService } from "./services/user.service"
 import StandardQueryPage from './pages/StandardQueryPage';
 import { ThemeProvider } from './context/ThemeContext';
+import FeedBackPage from './pages/FeedBackPage';
 
 
 interface AuthProviderProps {
@@ -48,6 +49,7 @@ function App() {
                 <Route path="/chat/:chatId" element={<ChatPage/>} />
                 <Route path="/standard-queries" element={<StandardQueryPage/>} />
                 <Route path="/shared-chats" element={<SharedChatsPage/>} />
+                <Route path='/feedback' element={<FeedBackPage/>} />
                 {/* <Route path="/task" element={<h1>Task Page</h1>} /> */}
             </Route>
           </Routes>
