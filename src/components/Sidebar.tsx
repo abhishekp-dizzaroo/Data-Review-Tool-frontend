@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/collapsible'
 import { chatService, ChatHistory } from '../services/chat.service'
 import { authService } from '../services/user.service'
+import { Skeleton } from '@/components/ui/skeleton'
 
 function Sidebar() {
   const location = useLocation();
@@ -20,6 +21,7 @@ function Sidebar() {
   const [showStandardQueries, setShowStandardQueries] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [chatHistories, setChatHistories] = useState<ChatHistory[]>([]);
+  const [loadingChats, setLoadingChats] = useState(true);
 
   // Load chat histories
   useEffect(() => {
@@ -33,6 +35,7 @@ function Sidebar() {
           console.error('Error loading chat histories:', error);
         }
       }
+      setLoadingChats(false);
     };
     loadChatHistories();
   }, []);
@@ -111,33 +114,42 @@ function Sidebar() {
           <div className="mt-4 px-3">
             <div className="text-xs font-medium mb-2 px-2 text-gray-500 dark:text-gray-400">RECENT CHATS</div>
             <ul className="space-y-1">
-              {chatHistories.map((chat) => {
-                const isActive = currentPath === `/chat/${chat._id}`;
-
-                return (
-                  <li key={chat._id} className="group relative flex items-center">
-                    <Link
-                      to={`/chat/${chat._id}`}
-                      className={`flex-1 flex items-center px-2 py-2 text-sm rounded-md transition-colors duration-200 ${
-                        isActive
-                          ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100'
-                      }`}
-                    >
-                      <MessageSquare size={15} className={`mr-2 ${isActive ? 'text-blue-500 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400 group-hover:text-gray-800 dark:group-hover:text-gray-200'}`} />
-                      <span className="truncate flex-1">{chat.title}</span>
-                      {isActive && <div className="w-1 h-1 rounded-full bg-blue-600 dark:bg-blue-400 ml-2"></div>}
-                    </Link>
-
-                    <button 
-                      onClick={() => handleDeleteChat(chat._id)}
-                      className="absolute right-2 p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-md"
-                    >
-                      <Trash2 size={14} className="text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400" />
-                    </button>
+              {loadingChats ? (
+                Array.from({ length: 5 }).map((_, idx) => (
+                  <li key={idx} className="flex items-center gap-2">
+                    <Skeleton className="w-7 h-7 rounded-full" />
+                    <Skeleton className="h-7 w-30 flex-1" />
                   </li>
-                );
-              })}
+                ))
+              ) : (
+                chatHistories.map((chat) => {
+                  const isActive = currentPath === `/chat/${chat._id}`;
+
+                  return (
+                    <li key={chat._id} className="group relative flex items-center">
+                      <Link
+                        to={`/chat/${chat._id}`}
+                        className={`flex-1 flex items-center px-2 py-2 text-sm rounded-md transition-colors duration-200 ${
+                          isActive
+                            ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                            : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100'
+                        }`}
+                      >
+                        <MessageSquare size={15} className={`mr-2 ${isActive ? 'text-blue-500 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400 group-hover:text-gray-800 dark:group-hover:text-gray-200'}`} />
+                        <span className="truncate flex-1">{chat.title}</span>
+                        {isActive && <div className="w-1 h-1 rounded-full bg-blue-600 dark:bg-blue-400 ml-2"></div>}
+                      </Link>
+
+                      <button 
+                        onClick={() => handleDeleteChat(chat._id)}
+                        className="absolute right-2 p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-md"
+                      >
+                        <Trash2 size={14} className="text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400" />
+                      </button>
+                    </li>
+                  );
+                })
+              )}
             </ul>
           </div>
 
