@@ -2,7 +2,7 @@ import axios from 'axios';
 import { authService } from './user.service';
 import axiosInstance from '@/config/axios';
 
-export interface QueryResult {
+export interface QueryResult extends Record<string, unknown> {
   subject_id: number;
 }
 

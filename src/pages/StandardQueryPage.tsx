@@ -62,7 +62,7 @@ function StandardQueryPage() {
   // Filter queries based on search term
   const filteredQueries = Object.entries(StandardQuery).map(([category, queries]) => {
     const filteredItems = searchTerm
-      ? queries.filter(query => query.toLowerCase().includes(searchTerm.toLowerCase()))
+      ? queries.filter(q => q.query.toLowerCase().includes(searchTerm.toLowerCase()))
       : queries
 
     return { category, queries: filteredItems }
@@ -133,12 +133,12 @@ function StandardQueryPage() {
                         return (
                             <li key={index} className="flex items-start justify-between p-4 hover:bg-gray-50">
                             <div className="flex-1 pr-4">
-                                <p className="text-sm text-gray-700">{query}</p>
+                                <p className="text-sm text-gray-700">{query.query}</p>
                             </div>
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => copyToClipboard(query, queryId)}
+                                onClick={() => copyToClipboard(query.query, queryId)}
                                 className="shrink-0 text-gray-500 hover:text-gray-700"
                             >
                                 {isCopied ? (
